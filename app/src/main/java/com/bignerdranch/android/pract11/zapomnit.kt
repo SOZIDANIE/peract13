@@ -24,6 +24,10 @@ class zapomnit : AppCompatActivity() {
     private lateinit var b1: Button
     private lateinit var db: KnigaDB
     private var index = -1
+    private var count = 0
+    private var count1 = 0
+    private var correct = 0
+    private var prov = Books.size
     private lateinit var editText : EditText
     private lateinit var editText1 :EditText
     private lateinit var editText2 : EditText
@@ -33,14 +37,15 @@ class zapomnit : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_zapomnit)
         b1 = findViewById(R.id.buttons)
-        editText = findViewById(R.id.editTextTextPersonName)
-        editText1 = findViewById(R.id.editTextTextPersonName3)
-        editText2 = findViewById(R.id.editTextNumber)
-        editText3 = findViewById(R.id.editTextTextPersonName2)
+        editText = findViewById(R.id.editTextTextPersonName)//name
+        editText1 = findViewById(R.id.editTextTextPersonName3)//author
+        editText2 = findViewById(R.id.editTextNumber)//pages
+        editText3 = findViewById(R.id.editTextTextPersonName2)//type
         bb = findViewById(R.id.imageButton)
         db = Room.databaseBuilder(this, KnigaDB::class.java, DATABASE_NAME).build()
         index = intent.getIntExtra("number", -1)
         upInfo()
+        Log.d("123", prov.toString())
         bb.setOnClickListener {
             super.onBackPressed()
         }
@@ -48,41 +53,41 @@ class zapomnit : AppCompatActivity() {
     private fun updateBook(){
         selectTV()
         b1.setOnClickListener {
-            if (index == -1) {
-                val uuidType = UUID.randomUUID()
-                val uuidZhanr = UUID.randomUUID()
-                Executors.newSingleThreadExecutor().execute {
-                    db.knigaDAO().addBook(
-                        KnigaTypes(
-                            uuidType,
-                            "${editText.text}",
-                            "${editText1.text}",
-                            "${editText2.text}"
-                        )
-                    )
-                    db.knigaDAO()
-                        .addZhanr(KnigaZhanr(uuidZhanr, uuidType, "${editText3.text}", Date()))
+            if(count==0)
+            {
+                for(i in Books){
+                    if (editText.text.toString() != Books[count1].name && editText1.text.toString() != Books[count1].author && editText3.text.toString() != Book[count1].zhanr)
+                    {
+                        correct++
+                    }
+                    else
+                    {
+                        Toast.makeText(applicationContext, "ERROR", Toast.LENGTH_SHORT).show()
+                    }
                 }
-            } else if (index != -1) {
-                Log.d("INDEX", "123")
-                Executors.newSingleThreadExecutor().execute {
-                    db.knigaDAO().saveBook(
-                        KnigaTypes(
-                            Books[index].idKniga,
-                            "${editText.text}",
-                            "${editText1.text}",
-                            "${editText2.text}"
-                        )
-                    )
-                    db.knigaDAO().saveZhanr(
-                        KnigaZhanr(
-                            Book[index].id,
-                            Books[index].idKniga,
-                            "${editText3.text}",
-                            Date()
-                        )
-                    )
+                if(correct>0)
+                {
+                    if (index == -1) {
+                        val uuidType = UUID.randomUUID()
+                        val uuidZhanr = UUID.randomUUID()
+                        Executors.newSingleThreadExecutor().execute {
+                            db.knigaDAO().addBook(KnigaTypes(uuidType, "${editText.text}", "${editText1.text}", "${editText2.text}"))
+                            db.knigaDAO().addZhanr(KnigaZhanr(uuidZhanr, uuidType, "${editText3.text}", Date()))
+                            count++
+                        }
+                    } else if (index != -1) {
+                        Log.d("INDEX", "123")
+                        Executors.newSingleThreadExecutor().execute {
+                            db.knigaDAO().saveBook(KnigaTypes(Books[index].idKniga, "${editText.text}", "${editText1.text}", "${editText2.text}"))
+                            db.knigaDAO().saveZhanr(KnigaZhanr(Book[index].id, Books[index].idKniga, "${editText3.text}", Date()))
+                            count++
+                        }
+                    }
                 }
+            }
+            else
+            {
+                b1.isEnabled = false
             }
         }
     }
